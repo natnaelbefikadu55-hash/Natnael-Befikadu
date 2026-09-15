@@ -19,7 +19,6 @@
     .jackpot-amount { font-size: 26px; font-weight: bold; color: #fff; margin: 5px 0; }
     .timer { font-size: 20px; color: #ef4444; font-weight: bold; }
 
-    /* Live Drawn Numbers Display */
     .drawn-box { background: #1e293b; border: 1px solid #3b82f6; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
     .current-num { font-size: 32px; font-weight: bold; color: #10b981; }
     .history-list { font-size: 12px; color: #94a3b8; margin-top: 5px; word-wrap: break-word; }
@@ -47,7 +46,6 @@
     <div>የሚቀረው ጊዜ: <span class="timer" id="timer">00:30</span></div>
   </div>
 
-  <!-- Drawn Numbers Section -->
   <div class="drawn-box">
     <div style="font-size: 12px; color: #38bdf8;">የወጣው ቁጥር</div>
     <div class="current-num" id="currentNum">--</div>
@@ -60,7 +58,7 @@
 
   <div class="bottom-bar">
     <div>የመረጡት: <span id="selectedCount" style="color: #10b981; font-weight: bold;">0</span>/4</div>
-    <button class="play-btn">ቀጥል</button>
+    <button class="play-btn" onclick="claimBingo()">ቢንጎ (BINGO)</button>
   </div>
 
   <script>
@@ -77,8 +75,6 @@
     socket.on('timer_update', (data) => {
       if (data.timer >= 0) {
         timerElement.innerText = `00:${data.timer < 10 ? '0' : ''}${data.timer}`;
-      } else {
-        timerElement.innerText = "ጨዋታው ላይ ነው!";
       }
       if (data.jackpot) {
         jackpotElement.innerText = `${data.jackpot.toLocaleString()} ETB`;
@@ -86,19 +82,36 @@
     });
 
     socket.on('number_drawn', (data) => {
+      timerElement.innerText = "ጨዋታው ላይ ነው!";
       currentNumElem.innerText = data.number;
       historyListElem.innerText = "ያለፉት: " + data.history.join(', ');
     });
 
-    socket.on('init_state', (data) => {
-      if (data.timer > 0) {
-        timerElement.innerText = `00:${data.timer < 10 ? '0' : ''}${data.timer}`;
-      }
-      if (data.drawnNumbers && data.drawnNumbers.length > 0) {
-        currentNumElem.innerText = data.drawnNumbers[data.drawnNumbers.length - 1];
-        historyListElem.innerText = "ያለፉት: " + data.drawnNumbers.join(', ');
-      }
+    // አዲስ ጨዋታ ሲጀምር ገጹን የማጽዳት አሰራር
+    socket.on('game_reset', (data) => {
+      currentNumElem.innerText = "--";
+      historyListElem.innerText = "ያለፉት: -";
+      alert(data.message);
     });
+
+    // ጨዋታው ሲያልቅ
+    socket.on('game_over', (data) => {
+      currentNumElem.innerText = "አበቃ!";
+      alert(data.message);
+    });
+
+    // BINGO ሲባል
+    socket.on('bingo_announced', (data) => {
+      alert(data.message);
+    });
+
+    function claimBingo() {
+      if (selectedCards.length === 0) {
+        alert("እባክዎን አስቀድመው ካርቴላ ይምረጡ!");
+        return;
+      }
+      socket.emit('claim_bingo', { cardId: selectedCards[0] });
+    }
 
     const grid = document.getElementById('cardGrid');
     let selectedCards = [];
