@@ -23,15 +23,28 @@
     .current-num { font-size: 32px; font-weight: bold; color: #10b981; }
     .history-list { font-size: 12px; color: #94a3b8; margin-top: 5px; word-wrap: break-word; }
 
-    .grid-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: 300px; overflow-y: auto; padding: 5px; }
+    .grid-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: 280px; overflow-y: auto; padding: 5px; }
     .card-btn { background: #334155; border: 1px solid #475569; color: white; padding: 12px 0; border-radius: 8px; font-weight: bold; cursor: pointer; }
     .card-btn.selected { background: #10b981; border-color: #059669; }
 
     .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #334155; }
     .play-btn { background: #f59e0b; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; color: #000; cursor: pointer; }
+
+    /* Custom Popup Modal (No browser alert) */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+    .modal-card { background: #1e293b; border: 2px solid #f59e0b; padding: 25px; border-radius: 15px; text-align: center; width: 90%; max-width: 320px; }
   </style>
 </head>
 <body>
+
+  <!-- Modal Popup Area -->
+  <div class="modal-overlay" id="noticeModal">
+    <div class="modal-card">
+      <h2 id="modalTitle" style="color: #f59e0b; margin-bottom: 10px;">ማስታወቂያ</h2>
+      <p id="modalMsg" style="font-size: 16px; color: #fff; margin-bottom: 20px;">--</p>
+      <button onclick="closeModal()" style="background: #f59e0b; border: none; padding: 10px 25px; border-radius: 8px; font-weight: bold; cursor: pointer;">እሺ</button>
+    </div>
+  </div>
 
   <div class="top-bar">
     <div class="balance-box">
@@ -72,6 +85,16 @@
     const currentNumElem = document.getElementById('currentNum');
     const historyListElem = document.getElementById('historyList');
 
+    function showNotice(title, msg) {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalMsg').innerText = msg;
+      document.getElementById('noticeModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('noticeModal').style.display = 'none';
+    }
+
     socket.on('timer_update', (data) => {
       if (data.timer >= 0) {
         timerElement.innerText = `00:${data.timer < 10 ? '0' : ''}${data.timer}`;
@@ -82,32 +105,29 @@
     });
 
     socket.on('number_drawn', (data) => {
-      timerElement.innerText = "ጨዋታው ላይ ነው!";
+      timerElement.innerText = "ቁጥር እየወጣ ነው...";
       currentNumElem.innerText = data.number;
       historyListElem.innerText = "ያለፉት: " + data.history.join(', ');
     });
 
-    // አዲስ ጨዋታ ሲጀምር ገጹን የማጽዳት አሰራር
     socket.on('game_reset', (data) => {
       currentNumElem.innerText = "--";
       historyListElem.innerText = "ያለፉት: -";
-      alert(data.message);
+      showNotice("🔄 አዲስ ጨዋታ", data.message || "አዲስ ጨዋታ ሊጀምር ነው!");
     });
 
-    // ጨዋታው ሲያልቅ
     socket.on('game_over', (data) => {
       currentNumElem.innerText = "አበቃ!";
-      alert(data.message);
+      showNotice("🏁 ጨዋታው ተጠናቋል", data.message || "ጨዋታው ተጠናቋል!");
     });
 
-    // BINGO ሲባል
     socket.on('bingo_announced', (data) => {
-      alert(data.message);
+      showNotice("🎉 BINGO!", data.message);
     });
 
     function claimBingo() {
       if (selectedCards.length === 0) {
-        alert("እባክዎን አስቀድመው ካርቴላ ይምረጡ!");
+        showNotice("ማስጠንቀቂያ", "እባክዎን አስቀድመው ካርቴላ ይምረጡ!");
         return;
       }
       socket.emit('claim_bingo', { cardId: selectedCards[0] });
