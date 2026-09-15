@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nice Bingo - Multiplayer</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
     body { background-color: #0f172a; color: #ffffff; text-align: center; padding: 10px; }
@@ -41,7 +42,7 @@
 
   <div class="jackpot-card">
     <div class="jackpot-title">ደራሽ (Jackpot)</div>
-    <div class="jackpot-amount">1,000 ETB</div>
+    <div class="jackpot-amount" id="jackpot">1,000 ETB</div>
     <div>ጨዋታው ሊጀምር ነው: <span class="timer" id="timer">00:30</span></div>
   </div>
 
@@ -59,6 +60,28 @@
   <script>
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
+
+    // Socket.io Connection
+    const socket = io("https://nice-bingo-api.onrender.com");
+
+    const timerElement = document.getElementById('timer');
+    const jackpotElement = document.getElementById('jackpot');
+
+    socket.on('timer_update', (data) => {
+      timerElement.innerText = `00:${data.timer < 10 ? '0' : ''}${data.timer}`;
+      if (data.jackpot) {
+        jackpotElement.innerText = `${data.jackpot.toLocaleString()} ETB`;
+      }
+    });
+
+    socket.on('init_state', (data) => {
+      if (data.timer > 0) {
+        timerElement.innerText = `00:${data.timer < 10 ? '0' : ''}${data.timer}`;
+      }
+      if (data.jackpot) {
+        jackpotElement.innerText = `${data.jackpot.toLocaleString()} ETB`;
+      }
+    });
 
     // Generate 600 Card Buttons
     const grid = document.getElementById('cardGrid');
