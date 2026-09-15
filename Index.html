@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nice Bingo Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        h1 { color: #0088cc; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 350px; margin: 20px auto; }
+        .cell { background: white; border: 2px solid #0088cc; border-radius: 8px; padding: 15px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .cell.marked { background: #2abb67; color: white; }
+        button { background: #0088cc; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Nice Bingo 🎲</h1>
+    <p>ቁጥሮቹን በመንካት ይጫወቱ!</p>
+    <div class="grid" id="bingoCard"></div>
+    <button onclick="generateCard()">አዲስ ካርድ አውጣ</button>
+
+    <script>
+        function generateCard() {
+            const grid = document.getElementById('bingoCard');
+            grid.innerHTML = '';
+            let nums = [];
+            while(nums.length < 25){
+                let r = Math.floor(Math.random() * 75) + 1;
+                if(nums.indexOf(r) === -1) nums.push(r);
+            }
+            nums.forEach(num => {
+                let cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.innerText = num;
+                cell.onclick = function() { this.classList.toggle('marked'); };
+                grid.appendChild(cell);
+            });
+        }
+        generateCard();
+    </script>
+</body>
+</html>
