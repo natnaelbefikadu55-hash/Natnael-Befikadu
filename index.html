@@ -30,14 +30,12 @@
     .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #334155; }
     .play-btn { background: #f59e0b; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; color: #000; cursor: pointer; }
 
-    /* Custom Popup Modal (No browser alert) */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
     .modal-card { background: #1e293b; border: 2px solid #f59e0b; padding: 25px; border-radius: 15px; text-align: center; width: 90%; max-width: 320px; }
   </style>
 </head>
 <body>
 
-  <!-- Modal Popup Area -->
   <div class="modal-overlay" id="noticeModal">
     <div class="modal-card">
       <h2 id="modalTitle" style="color: #f59e0b; margin-bottom: 10px;">ማስታወቂያ</h2>
@@ -56,7 +54,7 @@
   <div class="jackpot-card">
     <div class="jackpot-title">ደራሽ (Jackpot)</div>
     <div class="jackpot-amount" id="jackpot">1,000 ETB</div>
-    <div>የሚቀረው ጊዜ: <span class="timer" id="timer">00:30</span></div>
+    <div>ሁኔታ: <span class="timer" id="timer">00:30</span></div>
   </div>
 
   <div class="drawn-box">
@@ -96,8 +94,10 @@
     }
 
     socket.on('timer_update', (data) => {
-      if (data.timer >= 0) {
+      if (data.timer > 0) {
         timerElement.innerText = `00:${data.timer < 10 ? '0' : ''}${data.timer}`;
+      } else {
+        timerElement.innerText = "ጨዋታው ላይ ነው!";
       }
       if (data.jackpot) {
         jackpotElement.innerText = `${data.jackpot.toLocaleString()} ETB`;
@@ -113,12 +113,11 @@
     socket.on('game_reset', (data) => {
       currentNumElem.innerText = "--";
       historyListElem.innerText = "ያለፉት: -";
-      showNotice("🔄 አዲስ ጨዋታ", data.message || "አዲስ ጨዋታ ሊጀምር ነው!");
     });
 
     socket.on('game_over', (data) => {
       currentNumElem.innerText = "አበቃ!";
-      showNotice("🏁 ጨዋታው ተጠናቋል", data.message || "ጨዋታው ተጠናቋል!");
+      showNotice("🏁 ጨዋታው ተጠናቋል", data.message);
     });
 
     socket.on('bingo_announced', (data) => {
